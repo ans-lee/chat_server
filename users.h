@@ -10,6 +10,12 @@
 #include <netinet/in.h>
 
 /*
+ *  #defines
+ */
+
+#define MSG_MAX     1000    // 1000 character limit for messages
+
+/*
  *  Structs
  */
 

@@ -7,6 +7,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -24,7 +25,7 @@
 
 #define DEFAULT_PORT    8080
 #define MAX_CONNS       10
-#define MAX_CLIENTS     20
+#define MAX_USERS       20
 
 /*
  *  Global Variables
@@ -105,6 +106,13 @@ void handle_connections(int *server_fd, struct sockaddr_in *client_address) {
         fprintf(stderr, "pthread_create: could not create thread\n");
     }
     */
+
+    // Prevent users from joining the server if it's full
+    if (n_users + 1 > MAX_USERS) {
+        char *err_msg = "ServerError: The server is currently full\n";
+        write(conn_fd, err_msg, strlen(err_msg));
+        return;
+    }
 
     // Setup and save the user's details
     struct user *user = malloc(sizeof(struct user));
