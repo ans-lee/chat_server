@@ -46,11 +46,12 @@ void handle_connections(int *server_fd, struct sockaddr_in *client_address);
 int main(void) {
     int server_fd;
     int conn_fd;
-    char msg[200] = "";
     struct sockaddr_in server_address;
     struct sockaddr_in client_address;
 
     setup_server(&server_fd, &server_address, DEFAULT_PORT);
+    printf("######### Chat Server started on port %d\n\n", ntohs(server_address.sin_port));
+    printf("--------- Chat Log\n");
 
     while (1) {
         handle_connections(&server_fd, &client_address);
@@ -105,19 +106,12 @@ void handle_connections(int *server_fd, struct sockaddr_in *client_address) {
     }
     */
 
-    /*
-    char buffer[500] = {0};
-    long bytes_read = read(conn_fd, buffer, 500);
-    printf("%s\n", buffer);
-    write(conn_fd, "hii~", 4);
-    close(conn_fd);
-    */
-    
+    // Setup and save the user's details
     struct user *user = malloc(sizeof(struct user));
     user->addr = *client_address;
     user->conn_fd = conn_fd;
     user->id = n_users;
-    sprintf(user->name, "User 1");
+    sprintf(user->name, "User %d", user->id);
 
     handle_user(user);
 }
