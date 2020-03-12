@@ -107,12 +107,7 @@ void handle_connections(int *server_fd, struct sockaddr_in *client_address) {
     }
     */
 
-    // Prevent users from joining the server if it's full
-    if (n_users + 1 > MAX_USERS) {
-        char *err_msg = "ServerError: The server is currently full\n";
-        write(conn_fd, err_msg, strlen(err_msg));
-        return;
-    }
+    //TODO: msgs should be sent to the server then to all clients
 
     // Setup and save the user's details
     struct user *user = malloc(sizeof(struct user));
