@@ -31,4 +31,4 @@ struct user {
  */
 
 // Handles all communication with the user
-void handle_user(struct user *user);
+void *handle_user(void *data);

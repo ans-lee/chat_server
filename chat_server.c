@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <pthread.h>
 
 /*
  *  Non-library Includes
@@ -100,12 +101,6 @@ void handle_connections(int *server_fd, struct sockaddr_in *client_address) {
         exit(EXIT_FAILURE);
     }
     
-    /*
-    pthread_t thread_id;
-    if (pthread_create(&thread_id, NULL, handle_client, NULL) < 0) {
-        fprintf(stderr, "pthread_create: could not create thread\n");
-    }
-    */
 
     //TODO: msgs should be sent to the server then to all clients
 
@@ -116,5 +111,11 @@ void handle_connections(int *server_fd, struct sockaddr_in *client_address) {
     user->id = n_users;
     sprintf(user->name, "User %d", user->id);
 
-    handle_user(user);
+    // Create a thread for the new user
+    pthread_t thread_id;
+    if (pthread_create(&thread_id, NULL, handle_user, user) < 0) {
+        fprintf(stderr, "pthread_create: could not create thread\n");
+    } else {
+        printf("User %d has joined on thread %ld\n", user->id, thread_id);
+    }
 }
