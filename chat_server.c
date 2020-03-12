@@ -18,28 +18,16 @@
  *  Non-library Includes
  */
 
+#include "chat_server.h"
 #include "users.h"
 
-/*
- *  #defines
- */
-
-#define DEFAULT_PORT    8080
-#define MAX_CONNS       10
-#define MAX_USERS       20
+//TODO: Find some way to store msgs and send them to all clients
 
 /*
  *  Global Variables
  */
 
-int n_users = 0;
-
-/*
- *  Function Prototypes
- */
-
-void setup_server(int *server_fd, struct sockaddr_in *server_address, int port_num);
-void handle_connections(int *server_fd, struct sockaddr_in *client_address);
+_Atomic unsigned int n_users = 0;
 
 /*
  *  Main
@@ -66,7 +54,7 @@ int main(void) {
  *  Functions
  */
 
-void setup_server(int *server_fd, struct sockaddr_in *server_address, int port_num) {
+static void setup_server(int *server_fd, struct sockaddr_in *server_address, int port_num) {
     // Create the socket file descriptor
     if ((*server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         perror("socket");
@@ -91,7 +79,7 @@ void setup_server(int *server_fd, struct sockaddr_in *server_address, int port_n
     }
 }
 
-void handle_connections(int *server_fd, struct sockaddr_in *client_address) {
+static void handle_connections(int *server_fd, struct sockaddr_in *client_address) {
     int conn_fd;
     int addrlen = sizeof(client_address);
 
@@ -116,6 +104,9 @@ void handle_connections(int *server_fd, struct sockaddr_in *client_address) {
         fprintf(stderr, "pthread_create: could not create thread\n");
         destroy_user(user);
     } else {
-        printf("User %d has joined on thread %ld\n", user->id, thread_id);
+        if (n_users < MAX_USERS)
+            printf("User %d has joined on thread %ld\n", n_users, thread_id);
+        else
+            printf("User %d has failed to join, server full\n", n_users);
     }
 }

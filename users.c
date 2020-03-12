@@ -13,12 +13,7 @@
  */
 
 #include "users.h"
-
-/*
- *  #defines
- */
-
-#define MAX_USERS       20
+#include "chat_server.h"
 
 /*
  *  Functions
