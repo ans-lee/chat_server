@@ -32,3 +32,6 @@ struct user {
 
 // Handles all communication with the user
 void *handle_user(void *data);
+
+// Frees memory allocated to the user and close their connection
+void destroy_user(struct user *user);

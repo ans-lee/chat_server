@@ -101,7 +101,6 @@ void handle_connections(int *server_fd, struct sockaddr_in *client_address) {
         exit(EXIT_FAILURE);
     }
     
-
     //TODO: msgs should be sent to the server then to all clients
 
     // Setup and save the user's details
@@ -115,6 +114,7 @@ void handle_connections(int *server_fd, struct sockaddr_in *client_address) {
     pthread_t thread_id;
     if (pthread_create(&thread_id, NULL, handle_user, user) < 0) {
         fprintf(stderr, "pthread_create: could not create thread\n");
+        destroy_user(user);
     } else {
         printf("User %d has joined on thread %ld\n", user->id, thread_id);
     }
