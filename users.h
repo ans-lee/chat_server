@@ -33,11 +33,11 @@ struct user {
 // Initialises users_mutex for global user variables
 void initialise_users_mutex();
 
-// Returns the global variable n_users in users.c
-unsigned int get_n_users();
-
 // Adds a user to the struct user global array
 int add_user(struct user *user);
+
+// Sends the message to all users
+void send_message_to_all(struct user *user, char *message);
 
 // Handles all communication with the user
 void *handle_user(void *data);

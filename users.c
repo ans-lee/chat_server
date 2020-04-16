@@ -36,14 +36,6 @@ void initialise_users_mutex() {
     }
 }
 
-unsigned int get_n_users() {
-    pthread_mutex_lock(&users_mutex);
-    int result = n_users;
-    pthread_mutex_unlock(&users_mutex);
-
-    return n_users;
-}
-
 int add_user(struct user *user) {
     pthread_mutex_lock(&users_mutex);
     if (n_users >= MAX_USERS) {
@@ -59,6 +51,7 @@ int add_user(struct user *user) {
 
         if (users[free_id] == NULL) {
             users[free_id] = user;
+            user->id = free_id;
             next_user_id = free_id + 1;
             n_users++;
             pthread_mutex_unlock(&users_mutex);
@@ -71,6 +64,32 @@ int add_user(struct user *user) {
     // n_users is incorrectly set if the code gets here
     pthread_mutex_unlock(&users_mutex);
     return -1;
+}
+
+void send_message_to_all(struct user *user, char *message) {
+    char *buffer = malloc(strlen(user->name) + MSG_MAX);
+    if (buffer == NULL) {
+        fprintf(stderr, "send_message_to_all: not enough memory\n");
+        return;
+    }
+    sprintf(buffer, "%s: %s", user->name, message);
+
+    // Print message to the server
+    printf("%s", buffer);
+
+    pthread_mutex_lock(&users_mutex);
+    int count = 0;
+    for (int i = 0; i < MAX_USERS; i++) {
+        if (users[i]) {
+            count++;
+            write(users[i]->conn_fd, buffer, strlen(buffer) + 1);
+        }
+
+        if (count == n_users) {
+            break;
+        }
+    }
+    pthread_mutex_unlock(&users_mutex);
 }
 
 void *handle_user(void *data) {
@@ -89,33 +108,30 @@ void *handle_user(void *data) {
     } else {
         // Send message to the client to signal that it is connected
         server_print_user_join_status(user, 1);
-        write(user->conn_fd, "Keep-Alive", 11);
+        write(user->conn_fd, "", 1);
     }
 
     // Check for input from the user
     char buffer[MSG_MAX] = {0};
     while (read(user->conn_fd, buffer, MSG_MAX) > 0) {
         if (strcmp(buffer, "/quit\n") == 0) {
-            write(user->conn_fd, "/quit\n", 7);
+            write(user->conn_fd, "/quit", 6);
             break;
         }
 
-        printf("%s: %s\n", user->name, buffer);
-        //TODO: save messages to the server and transmit them to other users
+        send_message_to_all(user, buffer);
         bzero(buffer, MSG_MAX);
-        
-        // Send message to the client to signal that it is still connected
-        write(user->conn_fd, "Keep-Alive", 11);
     }
 
     server_print_user_left_status(user);
 
-    // Stop connection if no more input
-    destroy_user(user);
-
     pthread_mutex_lock(&users_mutex);
+    users[user->id] = NULL;
     n_users--;
     pthread_mutex_unlock(&users_mutex);
+
+    // Stop connection if no more input
+    destroy_user(user);
 
     // Destroy thread and return
     return NULL;
@@ -129,11 +145,7 @@ struct user *create_user(struct sockaddr_in *client_address, int conn_fd) {
 
     user->addr = client_address;
     user->conn_fd = conn_fd;
-
-    pthread_mutex_lock(&users_mutex);
-    user->id = n_users;
-    pthread_mutex_unlock(&users_mutex);
-
+    user->id = -1;
     sprintf(user->name, "User %d", user->id);
 
     return user;
