@@ -24,27 +24,22 @@
 //TODO: Find some way to store msgs and send them to all clients
 
 /*
- *  Global Variables
- */
-
-_Atomic unsigned int n_users = 0;
-
-/*
  *  Main
  */
 
 int main(void) {
+    initialise_users_mutex();
+
     int server_fd;
     int conn_fd;
     struct sockaddr_in server_address;
-    struct sockaddr_in client_address;
 
     setup_server(&server_fd, &server_address, DEFAULT_PORT);
     printf("######### Chat Server started on port %d\n\n", ntohs(server_address.sin_port));
     printf("--------- Chat Log\n");
 
     while (1) {
-        handle_connections(&server_fd, &client_address);
+        handle_connections(&server_fd);
     }
 
     return EXIT_SUCCESS;
@@ -79,24 +74,25 @@ static void setup_server(int *server_fd, struct sockaddr_in *server_address, int
     }
 }
 
-static void handle_connections(int *server_fd, struct sockaddr_in *client_address) {
+static void handle_connections(int *server_fd) {
     int conn_fd;
+    struct sockaddr_in *client_address = malloc(sizeof(struct sockaddr_in));
+    if (client_address == NULL) {
+        return;
+    }
     int addrlen = sizeof(client_address);
 
     // Create a socket to get the response from the connection
     if ((conn_fd = accept(*server_fd, (struct sockaddr*) client_address, (socklen_t*) &addrlen)) == -1) {
-        perror("accept");
-        exit(EXIT_FAILURE);
+        free(client_address);
+        return;
     }
     
-    //TODO: msgs should be sent to the server then to all clients
-
-    // Setup and save the user's details
-    struct user *user = malloc(sizeof(struct user));
-    user->addr = *client_address;
-    user->conn_fd = conn_fd;
-    user->id = n_users;
-    sprintf(user->name, "User %d", user->id);
+    struct user *user = create_user(client_address, conn_fd);
+    if (user == NULL) {
+        free(client_address);
+        return;
+    }
 
     // Create a thread for the new user
     pthread_t thread_id;
@@ -104,9 +100,11 @@ static void handle_connections(int *server_fd, struct sockaddr_in *client_addres
         fprintf(stderr, "pthread_create: could not create thread\n");
         destroy_user(user);
     } else {
-        if (n_users < MAX_USERS)
+        int n_users = get_n_users();
+        if (n_users < MAX_USERS) {
             printf("User %d has joined on thread %ld\n", n_users, thread_id);
-        else
+        } else {
             printf("User %d has failed to join, server full\n", n_users);
+        }
     }
 }

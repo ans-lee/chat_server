@@ -20,7 +20,7 @@
  */
 
 struct user {
-    struct sockaddr_in addr;
+    struct sockaddr_in *addr;
     int conn_fd;
     int id;
     char name[MAX_USER_NAME];
@@ -30,8 +30,18 @@ struct user {
  *  Functions
  */
 
+// Initialises users_mutex for global user variables
+void initialise_users_mutex();
+
+// Returns the global variable n_users in users.c
+unsigned int get_n_users();
+
 // Handles all communication with the user
 void *handle_user(void *data);
+
+// Creates a new user struct and returns the reference.
+// Returns NULL if unsuccessful.
+struct user *create_user(struct sockaddr_in *client_address, int conn_fd);
 
 // Frees memory allocated to the user and close their connection
 void destroy_user(struct user *user);

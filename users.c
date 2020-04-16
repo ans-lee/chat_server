@@ -16,15 +16,38 @@
 #include "chat_server.h"
 
 /*
+ *  Global Variables
+ */
+
+unsigned int n_users = 0;
+struct user *users[MAX_USERS];
+pthread_mutex_t users_mutex = {0};
+
+/*
  *  Functions
  */
+
+void initialise_users_mutex() {
+    int result = pthread_mutex_init(&users_mutex, NULL);
+    if (result) {
+        fprintf(stderr, "pthread_mutex_init: failed with error %d\n", result);
+        exit(EXIT_FAILURE);
+    }
+}
+
+unsigned int get_n_users() {
+    pthread_mutex_lock(&users_mutex);
+    int result = n_users;
+    pthread_mutex_unlock(&users_mutex);
+
+    return n_users;
+}
 
 void *handle_user(void *data) {
     // Stop thread on return
     pthread_detach(pthread_self());
     
     struct user *user = data;
-    extern int n_users;
 
     if (n_users < MAX_USERS) {
         // Send message to the client to signal that it is connected
@@ -48,6 +71,7 @@ void *handle_user(void *data) {
         }
 
         printf("%s: %s\n", user->name, buffer);
+        //TODO: save messages to the server and transmit them to other users
         bzero(buffer, MSG_MAX);
         
         // Send message to the client to signal that it is still connected
@@ -62,7 +86,26 @@ void *handle_user(void *data) {
     return NULL;
 }
 
+struct user *create_user(struct sockaddr_in *client_address, int conn_fd) {
+    struct user *user = malloc(sizeof(struct user));
+    if (user == NULL) {
+        return NULL;
+    }
+
+    user->addr = client_address;
+    user->conn_fd = conn_fd;
+
+    pthread_mutex_lock(&users_mutex);
+    user->id = n_users;
+    pthread_mutex_unlock(&users_mutex);
+
+    sprintf(user->name, "User %d", user->id);
+
+    return user;
+}
+
 void destroy_user(struct user *user) {
     close(user->conn_fd);
+    free(user->addr);
     free(user);
 }
