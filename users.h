@@ -36,6 +36,9 @@ void initialise_users_mutex();
 // Returns the global variable n_users in users.c
 unsigned int get_n_users();
 
+// Adds a user to the struct user global array
+int add_user(struct user *user);
+
 // Handles all communication with the user
 void *handle_user(void *data);
 
@@ -45,3 +48,10 @@ struct user *create_user(struct sockaddr_in *client_address, int conn_fd);
 
 // Frees memory allocated to the user and close their connection
 void destroy_user(struct user *user);
+
+/*
+ *  Debug Functions
+ */
+
+// Prints to the server what thread ID the user connected on or failed to connect on
+void print_user_join_status(struct user *user, int success);

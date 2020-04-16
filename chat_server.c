@@ -99,12 +99,5 @@ static void handle_connections(int *server_fd) {
     if (pthread_create(&thread_id, NULL, handle_user, user) < 0) {
         fprintf(stderr, "pthread_create: could not create thread\n");
         destroy_user(user);
-    } else {
-        int n_users = get_n_users();
-        if (n_users < MAX_USERS) {
-            printf("User %d has joined on thread %ld\n", n_users, thread_id);
-        } else {
-            printf("User %d has failed to join, server full\n", n_users);
-        }
     }
 }

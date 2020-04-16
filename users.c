@@ -20,6 +20,7 @@
  */
 
 unsigned int n_users = 0;
+unsigned int next_user_id = 0;
 struct user *users[MAX_USERS];
 pthread_mutex_t users_mutex = {0};
 
@@ -43,23 +44,53 @@ unsigned int get_n_users() {
     return n_users;
 }
 
+int add_user(struct user *user) {
+    pthread_mutex_lock(&users_mutex);
+    if (n_users >= MAX_USERS) {
+        pthread_mutex_unlock(&users_mutex);
+        return -1;
+    }
+
+    int free_id = next_user_id;
+    for (int i = 0; i < MAX_USERS; i++) {
+        if (free_id >= MAX_USERS) {
+            free_id = 0;
+        }
+
+        if (users[free_id] == NULL) {
+            users[free_id] = user;
+            next_user_id = free_id + 1;
+            n_users++;
+            pthread_mutex_unlock(&users_mutex);
+            return 0;
+        }
+        free_id++;
+    }
+
+    // No free slots (The code should not get here)
+    // n_users is incorrectly set if the code gets here
+    pthread_mutex_unlock(&users_mutex);
+    return -1;
+}
+
 void *handle_user(void *data) {
     // Stop thread on return
     pthread_detach(pthread_self());
     
     struct user *user = data;
 
-    if (n_users < MAX_USERS) {
-        // Send message to the client to signal that it is connected
-        write(user->conn_fd, "Keep-Alive", 10);
-    } else {
+    if (add_user(user)) {
         // Prevent users from joining the server if it's full
+        print_user_join_status(user, 0);
         char *err_msg = "ServerError: The server is currently full\n";
         write(user->conn_fd, err_msg, strlen(err_msg) + 1);
         destroy_user(user);
         return NULL;
+    } else {
+        // Send message to the client to signal that it is connected
+        print_user_join_status(user, 1);
+        write(user->conn_fd, "Keep-Alive", 11);
     }
-    n_users++;
 
     // Check for input from the user
     char buffer[MSG_MAX] = {0};
@@ -80,7 +111,10 @@ void *handle_user(void *data) {
 
     // Stop connection if no more input
     destroy_user(user);
+
+    pthread_mutex_lock(&users_mutex);
     n_users--;
+    pthread_mutex_unlock(&users_mutex);
 
     // Destroy thread and return
     return NULL;
@@ -108,4 +142,18 @@ void destroy_user(struct user *user) {
     close(user->conn_fd);
     free(user->addr);
     free(user);
+}
+
+/*
+ *  Debug Functions
+ */
+
+void print_user_join_status(struct user *user, int success) {
+    pthread_t thread_id = pthread_self();
+
+    if (success) {
+        printf("%s has joined on thread %ld\n", user->name, thread_id);
+    } else {
+        printf("%s has failed to join, server full on thread %ld\n", user->name, thread_id);
+    }
 }
