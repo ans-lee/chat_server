@@ -81,14 +81,14 @@ void *handle_user(void *data) {
 
     if (add_user(user)) {
         // Prevent users from joining the server if it's full
-        print_user_join_status(user, 0);
+        server_print_user_join_status(user, 0);
         char *err_msg = "ServerError: The server is currently full\n";
         write(user->conn_fd, err_msg, strlen(err_msg) + 1);
         destroy_user(user);
         return NULL;
     } else {
         // Send message to the client to signal that it is connected
-        print_user_join_status(user, 1);
+        server_print_user_join_status(user, 1);
         write(user->conn_fd, "Keep-Alive", 11);
     }
 
@@ -96,8 +96,7 @@ void *handle_user(void *data) {
     char buffer[MSG_MAX] = {0};
     while (read(user->conn_fd, buffer, MSG_MAX) > 0) {
         if (strcmp(buffer, "/quit\n") == 0) {
-            char *leave_msg = "You have left the server.\n";
-            write(user->conn_fd, leave_msg, strlen(leave_msg) + 1);
+            write(user->conn_fd, "/quit\n", 7);
             break;
         }
 
@@ -108,6 +107,8 @@ void *handle_user(void *data) {
         // Send message to the client to signal that it is still connected
         write(user->conn_fd, "Keep-Alive", 11);
     }
+
+    server_print_user_left_status(user);
 
     // Stop connection if no more input
     destroy_user(user);
@@ -145,10 +146,10 @@ void destroy_user(struct user *user) {
 }
 
 /*
- *  Debug Functions
+ *  Server Message Functions
  */
 
-void print_user_join_status(struct user *user, int success) {
+void server_print_user_join_status(struct user *user, int success) {
     pthread_t thread_id = pthread_self();
 
     if (success) {
@@ -156,4 +157,9 @@ void print_user_join_status(struct user *user, int success) {
     } else {
         printf("%s has failed to join, server full on thread %ld\n", user->name, thread_id);
     }
+}
+
+void server_print_user_left_status(struct user *user) {
+    pthread_t thread_id = pthread_self();
+    printf("%s has left on thread %ld\n", user->name, thread_id);
 }

@@ -50,8 +50,11 @@ struct user *create_user(struct sockaddr_in *client_address, int conn_fd);
 void destroy_user(struct user *user);
 
 /*
- *  Debug Functions
+ *  Server Message Functions
  */
 
 // Prints to the server what thread ID the user connected on or failed to connect on
-void print_user_join_status(struct user *user, int success);
+void server_print_user_join_status(struct user *user, int success);
+
+// Prints to the server what thread ID the user left on
+void server_print_user_left_status(struct user *user);

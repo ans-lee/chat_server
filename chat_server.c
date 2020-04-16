@@ -21,8 +21,6 @@
 #include "chat_server.h"
 #include "users.h"
 
-//TODO: Find some way to store msgs and send them to all clients
-
 /*
  *  Main
  */
