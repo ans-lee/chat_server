@@ -29,7 +29,6 @@ int main(void) {
     initialise_users_mutex();
 
     int server_fd;
-    int conn_fd;
     struct sockaddr_in server_address;
 
     setup_server(&server_fd, &server_address, DEFAULT_PORT);

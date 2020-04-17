@@ -24,6 +24,8 @@ unsigned int next_user_id = 0;
 struct user *users[MAX_USERS];
 pthread_mutex_t users_mutex = {0};
 
+//TODO: Make the client work with 2 threads (1 for sending msgs, 1 for recieving msgs)
+
 /*
  *  Functions
  */
