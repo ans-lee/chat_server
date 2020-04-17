@@ -23,7 +23,7 @@ struct user {
     struct sockaddr_in *addr;
     int conn_fd;
     int id;
-    char name[MAX_USER_NAME];
+    char name[MAX_USER_NAME + 1];   // +1 for NULL-terminating byte
 };
 
 /*

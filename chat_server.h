@@ -23,7 +23,7 @@
  */
 
 // Initialises the settings of the server and starts it up
-static void setup_server(int *server_fd, struct sockaddr_in *server_address, int port_num);
+static void setup_server(int *server_fd, struct sockaddr_in *server_address);
 
 // Handles incoming connections to the server
-static void handle_connections(int *server_fd);
+static void handle_connections(int server_fd);

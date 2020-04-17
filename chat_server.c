@@ -29,14 +29,14 @@ int main(void) {
     initialise_users_mutex();
 
     int server_fd;
-    struct sockaddr_in server_address;
+    struct sockaddr_in server_address = {0};
 
-    setup_server(&server_fd, &server_address, DEFAULT_PORT);
+    setup_server(&server_fd, &server_address);
     printf("######### Chat Server started on port %d\n\n", ntohs(server_address.sin_port));
     printf("--------- Chat Log\n");
 
     while (1) {
-        handle_connections(&server_fd);
+        handle_connections(server_fd);
     }
 
     return EXIT_SUCCESS;
@@ -46,7 +46,7 @@ int main(void) {
  *  Functions
  */
 
-static void setup_server(int *server_fd, struct sockaddr_in *server_address, int port_num) {
+static void setup_server(int *server_fd, struct sockaddr_in *server_address) {
     // Create the socket file descriptor
     if ((*server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         perror("socket");
@@ -56,7 +56,7 @@ static void setup_server(int *server_fd, struct sockaddr_in *server_address, int
     // Setup the socket
     server_address->sin_family = AF_INET;
     server_address->sin_addr.s_addr = INADDR_ANY;
-    server_address->sin_port = htons(port_num);
+    server_address->sin_port = htons(DEFAULT_PORT);
 
     // Assign address to the socket
     if (bind(*server_fd, (struct sockaddr*) server_address, sizeof(*server_address)) == -1) {
@@ -71,16 +71,17 @@ static void setup_server(int *server_fd, struct sockaddr_in *server_address, int
     }
 }
 
-static void handle_connections(int *server_fd) {
+static void handle_connections(int server_fd) {
     int conn_fd;
     struct sockaddr_in *client_address = malloc(sizeof(struct sockaddr_in));
+    bzero(client_address, sizeof(struct sockaddr_in));
     if (client_address == NULL) {
         return;
     }
     int addrlen = sizeof(client_address);
 
     // Create a socket to get the response from the connection
-    if ((conn_fd = accept(*server_fd, (struct sockaddr*) client_address, (socklen_t*) &addrlen)) == -1) {
+    if ((conn_fd = accept(server_fd, (struct sockaddr*) client_address, (socklen_t*) &addrlen)) == -1) {
         free(client_address);
         return;
     }

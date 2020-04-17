@@ -119,10 +119,12 @@ void *handle_user(void *data) {
         if (strcmp(buffer, "/quit\n") == 0) {
             write(user->conn_fd, "/quit", 6);
             break;
+        } else if (strcmp(buffer, "\n") == 0) {
+            write(user->conn_fd, "", 1);
+            continue;
         }
 
         send_message_to_all(user, buffer);
-        bzero(buffer, MSG_MAX);
     }
 
     server_print_user_left_status(user);
