@@ -141,23 +141,21 @@ void *handle_user(void *data) {
     return NULL;
 }
 
-struct user *create_user(struct sockaddr_in *client_address, int conn_fd) {
+struct user *create_user(int conn_fd, char *username) {
     struct user *user = malloc(sizeof(struct user));
     if (user == NULL) {
         return NULL;
     }
 
-    user->addr = client_address;
     user->conn_fd = conn_fd;
     user->id = -1;
-    sprintf(user->name, "User %d", user->id);
+    sprintf(user->name, "%s", username);
 
     return user;
 }
 
 void destroy_user(struct user *user) {
     close(user->conn_fd);
-    free(user->addr);
     free(user);
 }
 

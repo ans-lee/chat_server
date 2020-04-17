@@ -73,22 +73,25 @@ static void setup_server(int *server_fd, struct sockaddr_in *server_address) {
 
 static void handle_connections(int server_fd) {
     int conn_fd;
-    struct sockaddr_in *client_address = malloc(sizeof(struct sockaddr_in));
-    bzero(client_address, sizeof(struct sockaddr_in));
-    if (client_address == NULL) {
-        return;
-    }
+    struct sockaddr_in client_address = {0};
     int addrlen = sizeof(client_address);
 
     // Create a socket to get the response from the connection
-    if ((conn_fd = accept(server_fd, (struct sockaddr*) client_address, (socklen_t*) &addrlen)) == -1) {
-        free(client_address);
+    if ((conn_fd = accept(server_fd, (struct sockaddr*) &client_address, (socklen_t*) &addrlen)) == -1) {
+        perror("accept");
+        return;
+    }
+
+    char username[MAX_USER_NAME + 1] = {0};    // +1 for NULL-terminating byte
+    if (read(conn_fd, username, MAX_USER_NAME + 1) < 1) {
+        fprintf(stderr, "read: failed to read username from the client\n");
         return;
     }
     
-    struct user *user = create_user(client_address, conn_fd);
+    struct user *user = create_user(conn_fd, username);
     if (user == NULL) {
-        free(client_address);
+        fprintf(stderr, "create_user: not enough memory\n");
+        close(conn_fd);
         return;
     }
 

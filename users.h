@@ -20,7 +20,6 @@
  */
 
 struct user {
-    struct sockaddr_in *addr;
     int conn_fd;
     int id;
     char name[MAX_USER_NAME + 1];   // +1 for NULL-terminating byte
@@ -44,7 +43,7 @@ void *handle_user(void *data);
 
 // Creates a new user struct and returns the reference.
 // Returns NULL if unsuccessful.
-struct user *create_user(struct sockaddr_in *client_address, int conn_fd);
+struct user *create_user(int conn_fd, char *username);
 
 // Frees memory allocated to the user and close their connection
 void destroy_user(struct user *user);
