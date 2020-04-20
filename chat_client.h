@@ -29,4 +29,7 @@ static void setup_client(int *server_fd, struct sockaddr_in *server_address);
 static char *prompt_for_username();
 
 // Handles sending messages from the client to the server
-static void handle_send_message(int server_fd);
+static void *handle_send_message(void *data);
+
+// Handles receiving messages from the server to the client
+static void *handle_receive_message(void *data);

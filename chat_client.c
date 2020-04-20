@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
 /*
  *  Non-library Includes
@@ -35,7 +36,6 @@ int main(void) {
     struct sockaddr_in server_address = {0};
     
     setup_client(&server_fd, &server_address);
-    handle_send_message(server_fd);
 
     return EXIT_SUCCESS;
 }
@@ -72,6 +72,29 @@ static void setup_client(int *server_fd, struct sockaddr_in *server_address) {
     // Send username to the server to set this user's username
     send(*server_fd, username, strlen(username) + 1, 0);
 
+    // Create a thread for handling messages being sent
+    pthread_t send_thread_id;
+
+    if (pthread_create(&send_thread_id, NULL, handle_send_message, server_fd) < 0) {
+        fprintf(stderr, "pthread_create: could not create handle_send_message thread\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Create a thread for handling messages being received
+    pthread_t receive_thread_id;
+
+    if (pthread_create(&receive_thread_id, NULL, handle_receive_message, server_fd) < 0) {
+        fprintf(stderr, "pthread_create: could not create handle_receive_message thread\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Use pthread_join to allow main thread to wait for this thread before
+    // returning in main()
+    if (pthread_join(receive_thread_id, NULL)) {
+        fprintf(stderr, "pthread_join: could not join handle_receive_message thread\n");
+        exit(EXIT_FAILURE);
+    }
+
     free(username);
 }
 
@@ -102,29 +125,54 @@ static char *prompt_for_username() {
     return username;
 }
 
-static void handle_send_message(int server_fd) {
-    char buffer[MSG_MAX] = {0};
+static void *handle_send_message(void *data) {
+    // Stop thread on return
+    pthread_detach(pthread_self());
 
-    while (read(server_fd, buffer, MSG_MAX) && strcmp(buffer, "/quit") != 0) {
-        printf("%s", buffer);
+    // Collect arguments
+    int server_fd = *((int *) data);
 
-        char msg[MSG_MAX] = "";
+    char msg[MSG_MAX] = "";
+
+    while (1) {
         fgets(msg, MSG_MAX, stdin);
 
+        // Check if message is too long
         char *newline_char;
         if ((newline_char = strchr(msg, '\n')) == NULL) {
             printf("Your message exceeds the character limit.\n");
             flush_stdin();
+
+            // Send newline to signal server to ignore this message
             send(server_fd, "\n", 2, 0);
+
             continue;
         }
 
         send(server_fd, msg, strlen(msg) + 1, 0);
-        if (strcmp(msg, "/quit") == 0) {
-            break;
-        }
     }
+
+    // Destroy thread and return
+    return NULL;
+}
+
+static void *handle_receive_message(void *data) {
+    // Stop thread on return
+    pthread_detach(pthread_self());
+
+    // Collect arguments
+    int server_fd = *((int *) data);
+
+    char msg[MSG_MAX] = "";
+
+    while (read(server_fd, msg, MSG_MAX) && strcmp(msg, "/quit") != 0) {
+        printf("%s", msg);
+    }
+
     printf("You have left the server.\n");
+
+    // Destroy thread and return
+    return NULL;
 }
 
 /*

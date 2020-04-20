@@ -33,7 +33,7 @@ int main(void) {
 
     setup_server(&server_fd, &server_address);
     printf("######### Chat Server started on port %d\n\n", ntohs(server_address.sin_port));
-    printf("--------- Chat Log\n");
+    printf("--------- Server Log\n");
 
     while (1) {
         handle_connections(server_fd);
