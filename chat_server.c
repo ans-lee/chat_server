@@ -22,6 +22,13 @@
 #include "users.h"
 
 /*
+ *  Function Prototypes
+ */
+
+static void setup_server(int *server_fd, struct sockaddr_in *server_address);
+static void handle_connections(int server_fd);
+
+/*
  *  Main
  */
 
@@ -46,6 +53,7 @@ int main(void) {
  *  Functions
  */
 
+// Initialises the settings of the server and starts it up
 static void setup_server(int *server_fd, struct sockaddr_in *server_address) {
     // Create the socket file descriptor
     if ((*server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -71,6 +79,7 @@ static void setup_server(int *server_fd, struct sockaddr_in *server_address) {
     }
 }
 
+// Handles incoming connections to the server
 static void handle_connections(int server_fd) {
     int conn_fd;
     struct sockaddr_in client_address = {0};

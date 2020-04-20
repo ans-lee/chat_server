@@ -22,10 +22,14 @@
 #include "chat_client.h"
 
 /*
- *  Helper Function Prototypes
+ *  Function Prototypes
  */
 
-void flush_stdin();
+static void setup_client(int *server_fd, struct sockaddr_in *server_address);
+static char *prompt_for_username();
+static void *handle_send_message(void *data);
+static void *handle_receive_message(void *data);
+static void flush_stdin();
 
 /*
  *  Main
@@ -44,6 +48,7 @@ int main(void) {
  *  Functions
  */
 
+// Initialises the settings of the client and starts it up
 static void setup_client(int *server_fd, struct sockaddr_in *server_address) {
     char *username = prompt_for_username();
 
@@ -98,6 +103,7 @@ static void setup_client(int *server_fd, struct sockaddr_in *server_address) {
     free(username);
 }
 
+// Prompts the user for a username for the chat server
 static char *prompt_for_username() {
     char input[MAX_USER_NAME + 2];
     
@@ -125,6 +131,7 @@ static char *prompt_for_username() {
     return username;
 }
 
+// Handles sending messages from the client to the server
 static void *handle_send_message(void *data) {
     // Stop thread on return
     pthread_detach(pthread_self());
@@ -156,6 +163,7 @@ static void *handle_send_message(void *data) {
     return NULL;
 }
 
+// Handles receiving messages from the server to the client
 static void *handle_receive_message(void *data) {
     // Stop thread on return
     pthread_detach(pthread_self());
@@ -175,12 +183,8 @@ static void *handle_receive_message(void *data) {
     return NULL;
 }
 
-/*
- *  Helper Functions
- */
-
 // Flushes standard input
-void flush_stdin() {
+static void flush_stdin() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
