@@ -11,7 +11,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/ioctl.h>
 #include <netinet/in.h>
+#include <net/if.h>
+#include <arpa/inet.h>
 #include <pthread.h>
 
 /*
@@ -25,6 +28,7 @@
  *  Function Prototypes
  */
 
+static void get_server_ip_address(char *ip_buffer);
 static void setup_server(int *server_fd, struct sockaddr_in *server_address);
 static void handle_connections(int server_fd);
 
@@ -37,10 +41,15 @@ int main(void) {
 
     int server_fd;
     struct sockaddr_in server_address = {0};
+    char server_ip_address[MAX_IPV4_LEN + 1];   // +1 for null-terminating byte
 
+    get_server_ip_address(server_ip_address);
     setup_server(&server_fd, &server_address);
-    printf("######### Chat Server started on port %d\n\n", ntohs(server_address.sin_port));
-    printf("--------- Server Log\n");
+    printf("######### Chat Server started on IP %s, Port %d\n\n",
+            server_ip_address, ntohs(server_address.sin_port));
+    printf("--------------------\n");
+    printf("          Server Log\n");
+    printf("--------------------\n");
 
     while (1) {
         handle_connections(server_fd);
@@ -52,6 +61,21 @@ int main(void) {
 /*
  *  Functions
  */
+
+// Retrieves the IPv4 IP address of this machine, which is the server's IP address
+static void get_server_ip_address(char *ip_buffer) {
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    struct ifreq ifr = {0};
+
+    // Configure ifreq struct options
+    ifr.ifr_addr.sa_family = AF_INET;
+    strncpy(ifr.ifr_name, DEFAULT_NET_INTERFACE_NAME, IFNAMSIZ - 1);
+
+    ioctl(fd, SIOCGIFADDR, &ifr);
+    close(fd);
+
+    sprintf(ip_buffer, "%s", inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
+}
 
 // Initialises the settings of the server and starts it up
 static void setup_server(int *server_fd, struct sockaddr_in *server_address) {
