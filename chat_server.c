@@ -27,8 +27,11 @@
 
 static void check_for_config_file();
 static void create_config_file();
-static void setup_server(int *server_fd, struct sockaddr_in *server_address);
+static void read_from_config_file();
+static void setup_server(int *server_fd, struct sockaddr_in *server_address,
+        struct server_config *serv_conf);
 static void handle_connections(int server_fd);
+void config_parse_ports(struct server_config *serv_conf, char *line);
 
 /*
  *  Main
@@ -40,8 +43,10 @@ int main(void) {
 
     int server_fd;
     struct sockaddr_in server_address = {0};
+    struct server_config serv_conf = {0};
 
-    setup_server(&server_fd, &server_address);
+    read_from_config_file(&serv_conf);
+    setup_server(&server_fd, &server_address, &serv_conf);
     printf("######### Chat Server started on Port %d, listening on all Network Interfaces\n\n",
             ntohs(server_address.sin_port));
     printf("--------------------\n");
@@ -77,41 +82,64 @@ static void create_config_file() {
     // Create config file
     FILE *conf = fopen(CONFIG_NAME, "w");
     if (conf == NULL) {
-        perror("fopen:");
+        perror("fopen");
         exit(EXIT_FAILURE);
     }
 
     // Write all text to the config file
 
     // Title comment
-    fprintf(conf, "# Simple configuration file for server. Any line with # at the front will be ignored.\n\n");
+    fprintf(conf, "# Simple configuration file for server. Any line with # at the front will be ignored.\n"
+                  "#\n"
+                  "# Also, do not put lines that are ridiculously long (larger than 512 characters).\n"
+                  "# The program will fail to read the configuration file, and thus the server won't work.\n"
+                  "#\n"
+                  "# Delete this file if you have messed up the config fields and run the server to\n"
+                  "# generate a new config file.\n\n");
 
     // Ports option
     fprintf(conf, "# Change ports here to adjust which ports the server should\n"
                   "# use, separated by ONE comma. DO NOT put anything after \"ports:\",\n"
-                  "# change the numbers and use numbers greater than 0 and less than 65535 ONLY!\n"
-                  "# e.g.\n"
+                  "# change the numbers and use numbers greater than 0 and less than or equal to 65535 ONLY!\n"
+                  "#\n"
+                  "# A maximum of 5 ports can be set, any more will be ignored.\n"
+                  "#\n"
+                  "# Example\n"
                   "# ports:8080,7080,6080\n"
-                  "# NOTE: ports below 2000 are usually reserved. Ports above 5000 should be fine.\n"
+                  "#\n"
+                  "# NOTE: ports below 2000 are usually reserved. Ports above 5000 should be fine.\n\n"
                   "ports:8080,7080,6080\n\n");
 
     fclose(conf);
 }
 
 // Read from the config file and set some variables
-// TODO
-/*
-static void read_from_config_file() {
+static void read_from_config_file(struct server_config *serv_conf) {
     FILE *conf = fopen(CONFIG_NAME, "r");
     if (conf == NULL) {
-        perror("fopen:");
+        perror("fopen");
         exit(EXIT_FAILURE);
     }
+
+    // Read line by line
+    char line[BUFSIZ];
+    while (fgets(line, BUFSIZ, conf)) {
+        // Ignore comments
+        if (line[0] == '#') {
+            continue;
+        }
+
+        if (strstr(line, "ports:")) {
+            config_parse_ports(serv_conf, line);
+        }
+    }
+
+    fclose(conf);
 }
-*/
 
 // Initialises the settings of the server and starts it up
-static void setup_server(int *server_fd, struct sockaddr_in *server_address) {
+static void setup_server(int *server_fd, struct sockaddr_in *server_address,
+        struct server_config *serv_conf) {
     // Create the socket file descriptor
     if ((*server_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         perror("socket");
@@ -120,14 +148,19 @@ static void setup_server(int *server_fd, struct sockaddr_in *server_address) {
 
     // Setup the socket
     server_address->sin_family = AF_INET;
-    server_address->sin_addr.s_addr = INADDR_ANY;
+    server_address->sin_addr.s_addr = INADDR_ANY; // Read from any network interface
 
     // Pick an available port
-    int serv_ports[] = {SERV_PORT_1, SERV_PORT_2, SERV_PORT_3};
-    int size = sizeof(serv_ports) / sizeof(serv_ports[0]);
+    int size = sizeof(serv_conf->ports) / sizeof(serv_conf->ports[0]);
     for (int i = 0; i < size; i++) {
+        // No more ports
+        if (serv_conf->ports[i] == -1) {
+            fprintf(stderr, "bind: all available ports are occupied\n");
+            exit(EXIT_FAILURE);
+        }
+
         // Set the port
-        server_address->sin_port = htons(serv_ports[i]);
+        server_address->sin_port = htons(serv_conf->ports[i]);
 
         // Assign address to the socket
         if (bind(*server_fd, (struct sockaddr*) server_address, sizeof(*server_address)) == 0) {
@@ -180,5 +213,43 @@ static void handle_connections(int server_fd) {
     if (pthread_create(&thread_id, NULL, handle_user, user) < 0) {
         fprintf(stderr, "pthread_create: could not create thread\n");
         destroy_user(user);
+    }
+}
+
+/*
+ *  Config Parser Functions
+ */
+
+void config_parse_ports(struct server_config *serv_conf, char *line) {
+    // Make new string for strtok
+    char ports_str[strlen(line) + 1];
+    sprintf(ports_str, "%s", line);
+
+    // Get rid of the option part of the string
+    char *token = strtok(ports_str, ":");
+    token = strtok(NULL, ":");
+
+    // Get the first port
+    token = strtok(token, ",");
+
+    // Insert port numbers
+    // (up to the limit set by the size of serv_conf.ports or
+    // amount of ports found in the config file)
+    int size = sizeof(serv_conf->ports) / sizeof(serv_conf->ports[0]);
+    for (int i = 0; i < size; i++) {
+        if (token != NULL) {
+            serv_conf->ports[i] = atoi(token);
+
+            // Set DEFAULT_PORT if atoi failed
+            if (serv_conf->ports[i] == 0) {
+                serv_conf->ports[i] = DEFAULT_PORT;
+            }
+        } else {
+            // Set as unused
+            serv_conf->ports[i] = -1;
+        }
+
+        // Get next port
+        token = strtok(NULL, ",");
     }
 }
