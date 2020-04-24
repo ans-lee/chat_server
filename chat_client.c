@@ -60,7 +60,6 @@ static void setup_client(int *server_fd, struct sockaddr_in *server_address) {
 
     // Setup the socket
     server_address->sin_family = AF_INET;
-    server_address->sin_port = htons(DEFAULT_PORT);
 
     // Convert IPv4 and IPv6 addresses from text to binary form
     if (inet_pton(AF_INET, IP_ADDR, &(server_address->sin_addr)) == 0) {
@@ -68,10 +67,21 @@ static void setup_client(int *server_fd, struct sockaddr_in *server_address) {
         exit(EXIT_FAILURE);
     }
 
-    // Finally connect to the server
-    if (connect(*server_fd, (struct sockaddr*) server_address, sizeof(*server_address)) == -1) {
-        perror("connect");
-        exit(EXIT_FAILURE);
+    int ports[MAX_PORTS] = {PORT_1, PORT_2, PORT_3};
+
+    // Find which port the server is on
+    for (int i = 0; i < MAX_PORTS; i++) {
+        server_address->sin_port = htons(ports[i]);
+
+        // Connect to the server with the given port and IP address
+        if (connect(*server_fd, (struct sockaddr*) server_address, sizeof(*server_address)) == 0) {
+            break;
+        } else if (i == MAX_PORTS - 1) {
+            // Connection failed on all ports
+            fprintf(stderr, "Could not connect to the server. Either the"
+                            "server is offline or your connection has issues.\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     // Send username to the server to set this user's username
