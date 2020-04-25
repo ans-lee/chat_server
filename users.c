@@ -28,7 +28,7 @@ pthread_mutex_t users_mutex = {0};
  *  Functions
  */
 
-void initialise_users_mutex() {
+void init_users_mutex() {
     int result = pthread_mutex_init(&users_mutex, NULL);
     if (result) {
         fprintf(stderr, "pthread_mutex_init: failed with error %d\n", result);

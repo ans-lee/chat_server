@@ -30,7 +30,7 @@ struct user {
  */
 
 // Initialises users_mutex for global user variables
-void initialise_users_mutex();
+void init_users_mutex();
 
 // Adds a user to the struct user global array
 int add_user(struct user *user);

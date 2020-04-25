@@ -38,7 +38,7 @@ void config_parse_ports(struct server_config *serv_conf, char *line);
  */
 
 int main(void) {
-    initialise_users_mutex();
+    init_users_mutex();
     check_for_config_file();
 
     int server_fd;
