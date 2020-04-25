@@ -20,5 +20,3 @@ enum server_ports {
 
 #define IP_ADDR         "127.0.0.1"     // IP address of the server the client connects to. Change this to the server's IP
 #define MAX_PORTS       3               // Max number of ports the client will attempt to connect to
-#define MAX_USER_NAME   16              // Max username length
-#define MSG_MAX         1000            // 1000 character limit for messages from the server and sending

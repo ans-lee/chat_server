@@ -20,6 +20,7 @@
  */
 
 #include "chat_client.h"
+#include "messages.h"
 
 /*
  *  Function Prototypes
@@ -36,6 +37,8 @@ static void flush_stdin();
  */
 
 int main(void) {
+    init_msg_mutex();
+
     int server_fd;
     struct sockaddr_in server_address = {0};
     
@@ -115,11 +118,11 @@ static void setup_client(int *server_fd, struct sockaddr_in *server_address) {
 
 // Prompts the user for a username for the chat server
 static char *prompt_for_username() {
-    char input[MAX_USER_NAME + 2];
+    char input[NAME_MAX + 2];
     
     while (1) {
         printf("Enter a name (Max length is 16 characters): ");
-        fgets(input, MAX_USER_NAME + 2, stdin);
+        fgets(input, NAME_MAX + 2, stdin);
 
         char *newline_char;
         if ((newline_char = strchr(input, '\n')) != NULL) {
@@ -185,6 +188,12 @@ static void *handle_receive_message(void *data) {
 
     while (read(server_fd, msg, MSG_MAX) && strcmp(msg, "/quit") != 0) {
         printf("%s", msg);
+        struct message *new_msg = new_message(msg, NULL);
+        if (new_msg != NULL) {
+            add_to_messages(new_msg);
+        } else {
+            fprintf(stderr, "Cannot store any more messages.\n");
+        }
     }
 
     printf("You have left the server.\n");
