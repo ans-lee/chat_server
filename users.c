@@ -19,10 +19,10 @@
  *  Global Variables
  */
 
-unsigned int n_users = 0;
-unsigned int next_user_id = 0;
-struct user *users[MAX_USERS];
-pthread_mutex_t users_mutex = {0};
+static unsigned int n_users = 0;
+static unsigned int next_user_id = 0;
+static struct user *users[MAX_USERS];
+static pthread_mutex_t users_mutex;
 
 /*
  *  Functions

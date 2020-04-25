@@ -16,10 +16,10 @@
  *  Global Variables
  */
 
-struct message *msgs[N_MSGS];   // Circular array buffer
-int msg_start = 0;
-int msg_end = 0;
-pthread_mutex_t msg_mutex = {0};
+static struct message *msgs[N_MSGS];   // Circular array buffer
+static int msg_start = 0;
+static int msg_end = 0;
+static pthread_mutex_t msg_mutex;
 
 void init_msg_mutex() {
     int result = pthread_mutex_init(&msg_mutex, NULL);
