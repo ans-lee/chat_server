@@ -156,11 +156,19 @@ static void *handle_send_message(void *data) {
     // Collect arguments
     int server_fd = *((int *) data);
 
-    char msg[MSG_MAX] = "";
+    char msg[MSG_MAX] = {0};
+    bzero(msg, MSG_MAX);
 
+    int i = 0;
     while (1) {
-        fgets(msg, MSG_MAX, stdin);
+        //fgets(msg, MSG_MAX, stdin);
+        int msg_sent = read_input_from_user(msg, &i, MSG_MAX);
 
+        if (strcmp(msg, "/quit\n") == 0) {
+            break;
+        }
+
+        /*
         // Check if message is too long
         char *newline_char;
         if ((newline_char = strchr(msg, '\n')) == NULL) {
@@ -172,8 +180,19 @@ static void *handle_send_message(void *data) {
 
             continue;
         }
+        */
+
+        if (strlen(msg) == 0) {
+            continue;
+        }
 
         send(server_fd, msg, strlen(msg) + 1, 0);
+
+        if (msg_sent) {
+            bzero(msg, MSG_MAX);
+        }
+
+        resize_gui();
     }
 
     // Destroy thread and return
@@ -190,16 +209,26 @@ static void *handle_receive_message(void *data) {
 
     char msg[MSG_MAX] = "";
 
-    while (read(server_fd, msg, MSG_MAX) && strcmp(msg, "/quit") != 0) {
-        handle_gui_resize();
-        struct message *new_msg = new_message(msg, NULL);
-        if (new_msg != NULL) {
-            add_msg_to_chat_box(new_msg);
-            add_to_messages(new_msg);
-        } else {
-            fprintf(stderr, "Cannot store any more messages.\n");
+    while (1) {
+        if (recv(server_fd, msg, MSG_MAX, MSG_DONTWAIT) > 0) {
+            if (strcmp(msg, "/quit") == 0) {
+                break;
+            }
+
+            if (strcmp(msg, "") == 0) {
+                continue;
+            }
+
+            struct message *new_msg = new_message(msg, NULL);
+            if (new_msg != NULL) {
+                //add_msg_to_chat_box(new_msg);
+                //add_to_messages(new_msg);
+            } else {
+                fprintf(stderr, "Cannot store any more messages.\n");
+            }
         }
     }
+    destroy_gui();
 
     printf("You have left the server.\n");
 

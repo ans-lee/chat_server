@@ -25,10 +25,12 @@
 void init_gui();
 
 // Checks if gui needs to be resized and resizes if needed
-void handle_gui_resize();
+void resize_gui();
 
-// Adds a message to the chat box given the message struct
-void add_msg_to_chat_box(struct message *msg);
+// Reads from user input and stores input in the buffer, as
+// well as drawing the input in the input box. Returns 1 if
+// a message has been sent, 0 if not
+int read_input_from_user(char *buff, int *pos, int length);
 
 // Removes the gui and return to non curses mode
 void destroy_gui();
