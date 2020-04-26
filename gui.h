@@ -29,7 +29,7 @@ void resize_gui();
 
 // Reads from user input and stores input in the buffer, as
 // well as drawing the input in the input box. Returns 1 if
-// a message has been sent, 0 if not
+// the message should be sent, 0 if not
 int read_input_from_user(char *buff, int *pos, int length);
 
 // Removes the gui and return to non curses mode

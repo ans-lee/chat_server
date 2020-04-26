@@ -161,39 +161,21 @@ static void *handle_send_message(void *data) {
 
     int i = 0;
     while (1) {
-        //fgets(msg, MSG_MAX, stdin);
-        int msg_sent = read_input_from_user(msg, &i, MSG_MAX);
+        int send_msg = read_input_from_user(msg, &i, MSG_MAX);
 
         if (strcmp(msg, "/quit\n") == 0) {
             break;
         }
 
-        /*
-        // Check if message is too long
-        char *newline_char;
-        if ((newline_char = strchr(msg, '\n')) == NULL) {
-            printf("Your message exceeds the character limit.\n");
-            flush_stdin();
-
-            // Send newline to signal server to ignore this message
-            send(server_fd, "\n", 2, 0);
-
-            continue;
-        }
-        */
-
-        if (strlen(msg) == 0) {
-            continue;
-        }
-
-        send(server_fd, msg, strlen(msg) + 1, 0);
-
-        if (msg_sent) {
+        if (send_msg) {
+            send(server_fd, msg, strlen(msg) + 1, 0);
             bzero(msg, MSG_MAX);
         }
 
         resize_gui();
     }
+    destroy_gui();
+    exit(0);
 
     // Destroy thread and return
     return NULL;

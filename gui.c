@@ -104,7 +104,7 @@ void resize_gui() {
 
 int read_input_from_user(char *buff, int *pos, int length) {
     int ch = wgetch(input_box);
-    int msg_sent = 0;
+    int send_msg = 0;
     if (ch >= 32 && ch <= 126) {
         // Printable Characters
         if (*pos == 0) {
@@ -133,7 +133,7 @@ int read_input_from_user(char *buff, int *pos, int length) {
             mvwprintw(input_box, 0, 0, "Start typing to chat...");
             *pos = 0;
             wprintw(chat_box, "%s", buff);
-            msg_sent = 1;
+            send_msg = 1;
         }
     } else if (ch == '\b' || ch == 127) {
         if (*pos > 0) {
@@ -148,7 +148,7 @@ int read_input_from_user(char *buff, int *pos, int length) {
     }
 
     wrefresh(chat_box);
-    return msg_sent;
+    return send_msg;
 }
 
 void destroy_gui() {
