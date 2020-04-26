@@ -23,6 +23,12 @@
 #include "messages.h"
 #include "gui.h"
 
+//TODO:
+//- pad user's name to 16 chars for messages parsing or use \t
+//  e.g. ABC             Hello
+//- to fix race conditions, use a padded msg from server to
+//  tell the client how big the message is - no need just bzero and send the msg
+
 /*
  *  Function Prototypes
  */
@@ -192,7 +198,7 @@ static void *handle_receive_message(void *data) {
     char msg[MSG_MAX] = "";
 
     while (1) {
-        if (recv(server_fd, msg, MSG_MAX, MSG_DONTWAIT) > 0) {
+        if (recv(server_fd, msg, MSG_MAX, 0) > 0) {
             if (strcmp(msg, "/quit") == 0) {
                 break;
             }
@@ -203,8 +209,7 @@ static void *handle_receive_message(void *data) {
 
             struct message *new_msg = new_message(msg, NULL);
             if (new_msg != NULL) {
-                //add_msg_to_chat_box(new_msg);
-                //add_to_messages(new_msg);
+                add_to_messages(new_msg);
             } else {
                 fprintf(stderr, "Cannot store any more messages.\n");
             }

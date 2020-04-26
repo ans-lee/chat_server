@@ -132,7 +132,7 @@ int read_input_from_user(char *buff, int *pos, int length) {
             }
             mvwprintw(input_box, 0, 0, "Start typing to chat...");
             *pos = 0;
-            wprintw(chat_box, "%s", buff);
+            //wprintw(chat_box, "%s", buff);
             send_msg = 1;
         }
     } else if (ch == '\b' || ch == 127) {
@@ -149,6 +149,14 @@ int read_input_from_user(char *buff, int *pos, int length) {
 
     wrefresh(chat_box);
     return send_msg;
+}
+
+void add_msg_to_chat_box(struct message *msg) {
+    if (strlen(msg->sender) == 0) {
+        wprintw(chat_box, "[SERVER]: %s", msg->content);
+    } else {
+        wprintw(chat_box, "[%s]: %s", msg->sender, msg->content);
+    }
 }
 
 void destroy_gui() {

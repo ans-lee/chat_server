@@ -32,5 +32,8 @@ void resize_gui();
 // the message should be sent, 0 if not
 int read_input_from_user(char *buff, int *pos, int length);
 
+// Adds a message to the chat box
+void add_msg_to_chat_box(struct message *msg);
+
 // Removes the gui and return to non curses mode
 void destroy_gui();

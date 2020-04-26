@@ -19,7 +19,7 @@
 // Stores all the messages using a linked list and the number
 // of messages
 struct message {
-    char msg[MSG_MAX];
+    char content[MSG_MAX];
     char sender[NAME_MAX];
 };
 

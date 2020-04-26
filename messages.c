@@ -11,6 +11,7 @@
  */
 
 #include "messages.h"
+#include "gui.h"
 
 /*
  *  Global Variables
@@ -35,7 +36,7 @@ struct message *new_message(char *msg, char *sender) {
         return NULL;
     }
 
-    sprintf(new->msg, "%s", msg);
+    sprintf(new->content, "%s", msg);
     if (sender != NULL) {
         sprintf(new->sender, "%s", sender);
     }
@@ -44,6 +45,8 @@ struct message *new_message(char *msg, char *sender) {
 }
 
 void add_to_messages(struct message *msg) {
+    add_msg_to_chat_box(msg);
+
     pthread_mutex_lock(&msg_mutex);
     if (msgs[msg_end]) {
         destroy_message(msgs[msg_end]);
