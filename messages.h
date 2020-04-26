@@ -2,6 +2,8 @@
 //  Contains all data related to client messages
 //
 
+#pragma once
+
 /*
  *  #defines
  */

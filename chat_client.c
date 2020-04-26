@@ -21,6 +21,7 @@
 
 #include "chat_client.h"
 #include "messages.h"
+#include "gui.h"
 
 /*
  *  Function Prototypes
@@ -81,7 +82,7 @@ static void setup_client(int *server_fd, struct sockaddr_in *server_address) {
             break;
         } else if (i == MAX_PORTS - 1) {
             // Connection failed on all ports
-            fprintf(stderr, "Could not connect to the server. Either the"
+            fprintf(stderr, "Could not connect to the server. Either the "
                             "server is offline or your connection has issues.\n");
             exit(EXIT_FAILURE);
         }
@@ -89,6 +90,9 @@ static void setup_client(int *server_fd, struct sockaddr_in *server_address) {
 
     // Send username to the server to set this user's username
     send(*server_fd, username, strlen(username) + 1, 0);
+
+    // Initialise the gui
+    init_gui();
 
     // Create a thread for handling messages being sent
     pthread_t send_thread_id;
@@ -187,9 +191,10 @@ static void *handle_receive_message(void *data) {
     char msg[MSG_MAX] = "";
 
     while (read(server_fd, msg, MSG_MAX) && strcmp(msg, "/quit") != 0) {
-        printf("%s", msg);
+        handle_gui_resize();
         struct message *new_msg = new_message(msg, NULL);
         if (new_msg != NULL) {
+            add_msg_to_chat_box(new_msg);
             add_to_messages(new_msg);
         } else {
             fprintf(stderr, "Cannot store any more messages.\n");

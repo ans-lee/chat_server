@@ -3,6 +3,8 @@
 //  and handles the client
 //
 
+#pragma once
+
 /*
  *  Enums
  */

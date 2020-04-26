@@ -3,6 +3,8 @@
 //  the chat server
 //
 
+#pragma once
+
 /*
  *  Library Includes
  */

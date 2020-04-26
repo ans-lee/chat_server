@@ -3,6 +3,8 @@
 //  and handles the server
 //
 
+#pragma once
+
 /*
  *  #defines
  */
