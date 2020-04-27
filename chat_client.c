@@ -219,6 +219,7 @@ static void *handle_receive_message(void *data) {
             }
             free(msg_packet);
         }
+        bzero(buffer, MSG_MAX);
     }
     destroy_gui();
 

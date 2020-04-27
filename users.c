@@ -90,6 +90,7 @@ void send_message_to_all(struct user *user, char *message) {
         }
     }
     pthread_mutex_unlock(&users_mutex);
+    free(buffer);
 }
 
 void *handle_user(void *data) {
@@ -123,6 +124,7 @@ void *handle_user(void *data) {
         }
 
         send_message_to_all(user, buffer);
+        bzero(buffer, MSG_MAX);
     }
 
     server_print_user_left_status(user);
