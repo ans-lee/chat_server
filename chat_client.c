@@ -177,8 +177,6 @@ static void *handle_send_message(void *data) {
             send(server_fd, msg, strlen(msg) + 1, 0);
             bzero(msg, MSG_MAX);
         }
-
-        resize_gui();
     }
     destroy_gui();
     exit(0);

@@ -5,6 +5,7 @@
 #include <ncurses.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 
 /*
  *  Non-library Includes
@@ -27,6 +28,7 @@ static int max_y, max_x;    // Console screen dimensions
  */
 
 static void refresh_all_win();
+static void resize_gui(int sig);
 
 /*
  *  Functions
@@ -36,7 +38,7 @@ void init_gui() {
     // Set ncurse settings
     initscr();
     noecho();
-    curs_set(FALSE);
+    //curs_set(FALSE);
 
     getmaxyx(stdscr, max_y, max_x);
 
@@ -45,9 +47,6 @@ void init_gui() {
     chat_box = newwin(max_y - CHAT_BOX_SIZE - 2, max_x - 2, 1, 1);
     input_win = newwin(CHAT_BOX_SIZE, max_x, max_y - CHAT_BOX_SIZE, 0);
     input_box = newwin(1, max_x - 2, max_y - CHAT_BOX_SIZE + 1, 1);
-
-    // Remove wgetch blocking on the input_box window
-    nodelay(input_box, TRUE);
 
     // Enable scrolling for the chat_box window
     scrollok(chat_box, TRUE);
@@ -62,48 +61,13 @@ void init_gui() {
 
     // Refresh each window
     refresh_all_win();
-}
 
-void resize_gui() {
-    int new_y, new_x;
-
-    getmaxyx(stdscr, new_y, new_x);
-
-    if (new_y == max_y && new_x == max_x) {
-        // No need to resize
-        return;
-    }
-
-    max_x = new_x;
-    max_y = new_y;
-
-    // Resizing and repositioning
-    wresize(chat_win, max_y - CHAT_BOX_SIZE, max_x);
-    wresize(chat_box, max_y - CHAT_BOX_SIZE - 2, max_x - 2);
-    wresize(input_win, CHAT_BOX_SIZE, max_x);
-    wresize(input_box, 1, max_x - 2);
-    mvwin(chat_win, 0, 0);
-    mvwin(chat_box, 1, 1);
-    mvwin(input_win, max_y - CHAT_BOX_SIZE, 0);
-    mvwin(input_box, max_y - CHAT_BOX_SIZE + 1, 1);
-
-    // Clear all windows
-    wclear(chat_win);
-    wclear(chat_box);
-    wclear(input_win);
-    wclear(input_box);
-
-    // Redraw GUI design
-    box(chat_win, 0, 0);
-    box(input_win, 0, 0);
-    mvwprintw(chat_win, 0, 3, "Chat");
-    mvwprintw(input_box, 0, 0, "Start typing to chat...");
-
-    refresh_all_win();
+    // Resize gui when console is resized
+    signal(SIGWINCH, resize_gui);
 }
 
 int read_input_from_user(char *buff, int *pos, int length) {
-    int ch = wgetch(input_box);
+    int ch = getch();
     int send_msg = 0;
     if (ch >= 32 && ch <= 126) {
         // Printable Characters
@@ -147,7 +111,7 @@ int read_input_from_user(char *buff, int *pos, int length) {
         mvwprintw(input_box, 0, 0, "Start typing to chat...");
     }
 
-    wrefresh(chat_box);
+    refresh_all_win();
     return send_msg;
 }
 
@@ -157,6 +121,7 @@ void add_msg_to_chat_box(struct message *msg) {
     } else {
         wprintw(chat_box, "[%s]: %s", msg->sender, msg->content);
     }
+    refresh_all_win();
 }
 
 void destroy_gui() {
@@ -172,8 +137,41 @@ void destroy_gui() {
  */
 
 static void refresh_all_win() {
+    wrefresh(stdscr);
     wrefresh(chat_win);
     wrefresh(chat_box);
     wrefresh(input_win);
     wrefresh(input_box);
+}
+
+// Checks if gui needs to be resized and resizes if needed
+static void resize_gui(int sig) {
+    endwin();
+    refresh_all_win();
+
+    getmaxyx(stdscr, max_y, max_x);
+
+    // Resizing and repositioning
+    wresize(chat_win, max_y - CHAT_BOX_SIZE, max_x);
+    wresize(chat_box, max_y - CHAT_BOX_SIZE - 2, max_x - 2);
+    wresize(input_win, CHAT_BOX_SIZE, max_x);
+    wresize(input_box, 1, max_x - 2);
+    mvwin(chat_win, 0, 0);
+    mvwin(chat_box, 1, 1);
+    mvwin(input_win, max_y - CHAT_BOX_SIZE, 0);
+    mvwin(input_box, max_y - CHAT_BOX_SIZE + 1, 1);
+
+    // Clear all windows
+    wclear(chat_win);
+    wclear(chat_box);
+    wclear(input_win);
+    wclear(input_box);
+
+    // Redraw GUI design
+    box(chat_win, 0, 0);
+    box(input_win, 0, 0);
+    mvwprintw(chat_win, 0, 3, "Chat");
+    mvwprintw(input_box, 0, 0, "Start typing to chat...");
+
+    refresh_all_win();
 }
