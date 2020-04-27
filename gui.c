@@ -38,7 +38,7 @@ void init_gui() {
     // Set ncurse settings
     initscr();
     noecho();
-    //curs_set(FALSE);
+    curs_set(FALSE);
 
     getmaxyx(stdscr, max_y, max_x);
 
@@ -48,8 +48,9 @@ void init_gui() {
     input_win = newwin(CHAT_BOX_SIZE, max_x, max_y - CHAT_BOX_SIZE, 0);
     input_box = newwin(1, max_x - 2, max_y - CHAT_BOX_SIZE + 1, 1);
 
-    // Enable scrolling for the chat_box window
+    // Enable scrolling for chat_box and input_box windows
     scrollok(chat_box, TRUE);
+    scrollok(input_box, TRUE);
 
     // Draw borders
     box(chat_win, 0, 0);
@@ -76,6 +77,7 @@ int read_input_from_user(char *buff, int *pos, int length) {
             mvwprintw(input_box, 0, 0, "%c", ch);
             buff[*pos] = ch;
             *pos += 1;
+            curs_set(TRUE);
         } else if (*pos < length - 2) {
             wprintw(input_box, "%c", ch);
             buff[*pos] = ch;
@@ -96,8 +98,8 @@ int read_input_from_user(char *buff, int *pos, int length) {
             }
             mvwprintw(input_box, 0, 0, "Start typing to chat...");
             *pos = 0;
-            //wprintw(chat_box, "%s", buff);
             send_msg = 1;
+            curs_set(FALSE);
         }
     } else if (ch == '\b' || ch == 127) {
         if (*pos > 0) {
@@ -106,12 +108,17 @@ int read_input_from_user(char *buff, int *pos, int length) {
             wprintw(input_box, "\b \b");
             *pos -= 1;
         }
+
+        if (*pos == 0) {
+            mvwprintw(input_box, 0, 0, "Start typing to chat...");
+            curs_set(FALSE);
+        }
     } else if (*pos == 0) {
         // Nothing in the chat box
         mvwprintw(input_box, 0, 0, "Start typing to chat...");
     }
 
-    refresh_all_win();
+    wrefresh(input_box);
     return send_msg;
 }
 
@@ -163,15 +170,13 @@ static void resize_gui(int sig) {
 
     // Clear all windows
     wclear(chat_win);
-    wclear(chat_box);
+    //wclear(chat_box);
     wclear(input_win);
-    wclear(input_box);
 
     // Redraw GUI design
     box(chat_win, 0, 0);
     box(input_win, 0, 0);
     mvwprintw(chat_win, 0, 3, "Chat");
-    mvwprintw(input_box, 0, 0, "Start typing to chat...");
 
     refresh_all_win();
 }
