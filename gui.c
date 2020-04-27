@@ -12,6 +12,7 @@
  */
 
 #include "gui.h"
+#include "messages.h"
 
 /*
  *  Global Variables
@@ -170,7 +171,7 @@ static void resize_gui(int sig) {
 
     // Clear all windows
     wclear(chat_win);
-    //wclear(chat_box);
+    wclear(chat_box);
     wclear(input_win);
 
     // Redraw GUI design
@@ -179,4 +180,7 @@ static void resize_gui(int sig) {
     mvwprintw(chat_win, 0, 3, "Chat");
 
     refresh_all_win();
+
+    // Redraw chat messages
+    print_all_messages();
 }

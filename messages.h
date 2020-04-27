@@ -8,9 +8,9 @@
  *  #defines
  */
 
-#define N_MSGS      10      // Max number of messages
-#define MSG_MAX     1000    // Max length of a message
-#define NAME_MAX    16      // Max length of a name
+#define N_MAX_MSGS      50      // Max number of messages
+#define MSG_MAX         1000    // Max length of a message
+#define NAME_MAX        16      // Max length of a name
 
 /*
  *  Structs
@@ -36,6 +36,9 @@ struct message *new_message(char *msg, char *sender);
 
 // Adds a message to the global msgs buffer
 void add_to_messages(struct message *msg);
+
+// Prints all messages stored so far
+void print_all_messages();
 
 // Frees memory allocated to the struct message passed in
 void destroy_message(struct message *msg);
