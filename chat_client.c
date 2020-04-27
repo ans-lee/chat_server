@@ -195,24 +195,29 @@ static void *handle_receive_message(void *data) {
     // Collect arguments
     int server_fd = *((int *) data);
 
-    char msg[MSG_MAX] = "";
+    char buffer[MSG_MAX] = "";
 
     while (1) {
-        if (recv(server_fd, msg, MSG_MAX, 0) > 0) {
-            if (strcmp(msg, "/quit") == 0) {
+        if (recv(server_fd, buffer, MSG_MAX, 0) > 0) {
+            if (strcmp(buffer, "/quit") == 0) {
                 break;
             }
 
-            if (strcmp(msg, "") == 0) {
+            if (strcmp(buffer, "") == 0) {
                 continue;
             }
 
-            struct message *new_msg = new_message(msg, NULL);
+            char *msg_packet = strdup(buffer);
+            char *sender = strtok(msg_packet, "\t");
+            char *msg = strtok(NULL, "\t");
+
+            struct message *new_msg = new_message(msg, sender);
             if (new_msg != NULL) {
                 add_to_messages(new_msg);
             } else {
                 fprintf(stderr, "Cannot store any more messages.\n");
             }
+            free(msg_packet);
         }
     }
     destroy_gui();

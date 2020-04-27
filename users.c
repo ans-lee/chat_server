@@ -72,7 +72,7 @@ void send_message_to_all(struct user *user, char *message) {
         fprintf(stderr, "send_message_to_all: not enough memory\n");
         return;
     }
-    sprintf(buffer, "%s: %s", user->name, message);
+    sprintf(buffer, "%s\t%s", user->name, message);
 
     // Print message to the server
     printf("%s", buffer);
