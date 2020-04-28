@@ -61,8 +61,11 @@ int main(void) {
     int server_fd;
     struct sockaddr_in server_address = {0};
     
+    // Start connecting to the server
     setup_client(&server_fd, &server_address);
 
+    // Connection to the server has been stopped, close the socket
+    close(server_fd);
     return EXIT_SUCCESS;
 }
 
@@ -174,24 +177,10 @@ static void *handle_send_message(void *data) {
     // Collect arguments
     int server_fd = *((int *) data);
 
-    char msg[MSG_MAX] = {0};
-    bzero(msg, MSG_MAX);
-
-    int i = 0;
     while (1) {
-        int send_msg = read_input_from_user(msg, &i, MSG_MAX);
-
-        if (strcmp(msg, "/quit\n") == 0) {
-            break;
-        }
-
-        if (send_msg) {
-            send(server_fd, msg, strlen(msg) + 1, 0);
-            bzero(msg, MSG_MAX);
-        }
+        char *msg = read_input_from_user();
+        send(server_fd, msg, strlen(msg) + 1, 0);
     }
-    destroy_gui();
-    exit(0);
 
     // Destroy thread and return
     return NULL;

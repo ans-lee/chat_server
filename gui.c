@@ -22,7 +22,8 @@ static WINDOW *chat_win;
 static WINDOW *input_win;
 static WINDOW *chat_box;
 static WINDOW *input_box;
-static int max_y, max_x;    // Console screen dimensions
+static int max_y, max_x;                    // Console screen dimensions
+static char input_buff[MSG_MAX + 1] = {0};  // Input buffer text
 
 /*
  *  Function Prototypes
@@ -69,63 +70,46 @@ void init_gui() {
     signal(SIGWINCH, resize_gui);
 }
 
-int read_input_from_user(char *buff, int *pos, int length) {
-    int ch = getch();
-    int send_msg = 0;
-    if (ch >= 32 && ch <= 126) {
-        // Printable Characters
-        if (*pos == 0) {
-            wclear(input_box);
-            mvwprintw(input_box, 0, 0, "%c", ch);
-            buff[*pos] = ch;
-            *pos += 1;
-            curs_set(TRUE);
-        } else if (*pos < length - 2) {
-            wprintw(input_box, "%c", ch);
-            buff[*pos] = ch;
-            *pos += 1;
-        }
-    } else if (ch == '\n') {
-        // Newline
-
-        // Ignore empty messages
-        if (*pos != 0) {
-            if (*pos < length - 2) {
-                buff[*pos] = ch;
+char *read_input_from_user() {
+    int ch;
+    int i = 0;
+    bzero(input_buff, MSG_MAX);
+    while ((ch = getch()) != '\n' || i == 0) {
+        if (ch >= 32 && ch <= 126 && i < MSG_MAX + 1) {
+            if (i == 0) {
                 wclear(input_box);
+                curs_set(TRUE);
+                mvwprintw(input_box, 0, 0, "%c", ch);
             } else {
-                buff[length - 2] = '\n';
-                buff[length - 1] = '\0';
-                wclear(input_box);
+                wprintw(input_box, "%c", ch);
             }
-            mvwprintw(input_box, 0, 0, "Start typing to chat...");
-            *pos = 0;
-            send_msg = 1;
-            curs_set(FALSE);
-        }
-    } else if (ch == KEY_BACKSPACE) {
-        if (*pos > 0) {
-            // Backspace
-            buff[*pos] = '\0';
-            wprintw(input_box, "\b \b");
-            *pos -= 1;
-        }
+            input_buff[i] = ch;
+            i++;
+        } else if (ch == KEY_BACKSPACE && i > 0) {
+            i--;
+            input_buff[i] = '\0';
+            wprintw(input_box, "\b \b", ch);
 
-        if (*pos == 0) {
-            mvwprintw(input_box, 0, 0, "Start typing to chat...");
-            curs_set(FALSE);
+            if (i == 0) {
+                mvwprintw(input_box, 0, 0, "Start typing to chat...");
+                curs_set(FALSE);
+            }
         }
+        wrefresh(input_box);
     }
 
-    wrefresh(input_box);
-    return send_msg;
+    wclear(input_box);
+    mvwprintw(input_box, 0, 0, "Start typing to chat...");
+    curs_set(FALSE);
+
+    return input_buff;
 }
 
 void add_msg_to_chat_box(struct message *msg) {
     if (strlen(msg->sender) == 0) {
-        wprintw(chat_box, "[SERVER]: %s", msg->content);
+        wprintw(chat_box, "[SERVER]: %s\n", msg->content);
     } else {
-        wprintw(chat_box, "[%s]: %s", msg->sender, msg->content);
+        wprintw(chat_box, "[%s]: %s\n", msg->sender, msg->content);
     }
     refresh_all_win();
 }

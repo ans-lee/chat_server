@@ -75,7 +75,7 @@ void send_message_to_all(struct user *user, char *message) {
     sprintf(buffer, "%s\t%s", user->name, message);
 
     // Print message to the server
-    printf("%s", buffer);
+    printf("[%s]: %s\n", user->name, message);
 
     pthread_mutex_lock(&users_mutex);
     int count = 0;
@@ -115,12 +115,9 @@ void *handle_user(void *data) {
     // Check for input from the user
     char buffer[MSG_MAX] = {0};
     while (read(user->conn_fd, buffer, MSG_MAX) > 0) {
-        if (strcmp(buffer, "/quit\n") == 0) {
+        if (strcmp(buffer, "/quit") == 0) {
             write(user->conn_fd, "/quit", 6);
             break;
-        } else if (strcmp(buffer, "\n") == 0) {
-            write(user->conn_fd, "", 1);
-            continue;
         }
 
         send_message_to_all(user, buffer);
@@ -164,16 +161,13 @@ void destroy_user(struct user *user) {
  */
 
 void server_print_user_join_status(struct user *user, int success) {
-    pthread_t thread_id = pthread_self();
-
     if (success) {
-        printf("%s has joined on thread %ld\n", user->name, thread_id);
+        printf("%s has joined\n", user->name);
     } else {
-        printf("%s has failed to join, server full on thread %ld\n", user->name, thread_id);
+        printf("%s has failed to join\n", user->name);
     }
 }
 
 void server_print_user_left_status(struct user *user) {
-    pthread_t thread_id = pthread_self();
-    printf("%s has left on thread %ld\n", user->name, thread_id);
+    printf("%s has left\n", user->name);
 }
