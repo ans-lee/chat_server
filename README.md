@@ -48,6 +48,8 @@ connect to the server! The terminal running the server will print a message sayi
 Currently, there is no plans to continue work on this chat program. However, if I ever work on it again,
 these are the features I plan to implement or bugs I intend to fix:
 
+* Fix flickering
+* Prevent junky text when typing too fast
 * Chat scrolling
 * Add more commands (e.g. /help, /onlineusers)
 * Multiple chat channels
