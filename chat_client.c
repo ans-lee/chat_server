@@ -23,18 +23,6 @@
 #include "messages.h"
 #include "gui.h"
 
-//TODO:
-//- enable chat log scrolling
-//- use getch for asking for username
-//- make client use arguments to determine which port and ip address to connect to
-//- make server send a magic code to tell the client connected to the write server
-//- make server use arguments to determine which port to use
-//- make server annoucements for who joined and left
-//- add /help commands
-//- add channel features
-//- add customisation (color, etc.)
-//- enforce unique names
-
 /*
  *  Function Prototypes
  */
