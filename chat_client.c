@@ -28,6 +28,18 @@
 //  e.g. ABC             Hello
 //- to fix race conditions, use a padded msg from server to
 //  tell the client how big the message is - no need just bzero and send the msg
+//- correct the buffer size for server sending to user (message is username + 1 + message)
+//- enable chat log scrolling
+//- moderate input for the typing to chat
+//- use getch for asking for username
+//- make client use arguments to determine which port and ip address to connect to
+//- make server send a magic code to tell the client connected to the write server
+//- make server use arguments to determine which port to use
+//- make server annoucements for who joined and left
+//- add /help commands
+//- add channel features
+//- add customisation (color, etc.)
+//- enforce unique names
 
 /*
  *  Function Prototypes

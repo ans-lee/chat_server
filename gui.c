@@ -39,6 +39,7 @@ void init_gui() {
     // Set ncurse settings
     initscr();
     noecho();
+    keypad(stdscr, TRUE);
     curs_set(FALSE);
 
     getmaxyx(stdscr, max_y, max_x);
@@ -102,7 +103,7 @@ int read_input_from_user(char *buff, int *pos, int length) {
             send_msg = 1;
             curs_set(FALSE);
         }
-    } else if (ch == '\b' || ch == 127) {
+    } else if (ch == KEY_BACKSPACE) {
         if (*pos > 0) {
             // Backspace
             buff[*pos] = '\0';
@@ -114,9 +115,6 @@ int read_input_from_user(char *buff, int *pos, int length) {
             mvwprintw(input_box, 0, 0, "Start typing to chat...");
             curs_set(FALSE);
         }
-    } else if (*pos == 0) {
-        // Nothing in the chat box
-        mvwprintw(input_box, 0, 0, "Start typing to chat...");
     }
 
     wrefresh(input_box);
