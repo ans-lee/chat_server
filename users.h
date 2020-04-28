@@ -15,7 +15,7 @@
  *  #defines
  */
 
-#define MAX_USER_NAME   16      // 16 character limit for a user name
+#define USERNAME_MAX   16      // 16 character limit for a user name
 
 /*
  *  Structs
@@ -24,7 +24,7 @@
 struct user {
     int conn_fd;
     int id;
-    char name[MAX_USER_NAME + 1];   // +1 for NULL-terminating byte
+    char name[USERNAME_MAX + 1];   // +1 for NULL-terminator
 };
 
 /*

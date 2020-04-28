@@ -18,9 +18,10 @@
 
 // Stores all the messages using a linked list and the number
 // of messages
+// String fields have +1 for NULL-terminator
 struct message {
-    char content[MSG_MAX];
-    char sender[NAME_MAX];
+    char content[MSG_MAX + 1];
+    char sender[NAME_MAX + 1];
 };
 
 /*

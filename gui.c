@@ -23,7 +23,7 @@ static WINDOW *input_win;
 static WINDOW *chat_box;
 static WINDOW *input_box;
 static int max_y, max_x;                    // Console screen dimensions
-static char input_buff[MSG_MAX + 1] = {0};  // Input buffer text
+static char input_buff[MSG_MAX + 1] = {0};  // Input buffer text, +1 for NULL-terminator
 
 /*
  *  Function Prototypes

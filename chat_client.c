@@ -24,13 +24,7 @@
 #include "gui.h"
 
 //TODO:
-//- pad user's name to 16 chars for messages parsing or use \t
-//  e.g. ABC             Hello
-//- to fix race conditions, use a padded msg from server to
-//  tell the client how big the message is - no need just bzero and send the msg
-//- correct the buffer size for server sending to user (message is username + 1 + message)
 //- enable chat log scrolling
-//- moderate input for the typing to chat
 //- use getch for asking for username
 //- make client use arguments to determine which port and ip address to connect to
 //- make server send a magic code to tell the client connected to the write server
@@ -110,7 +104,7 @@ static void setup_client(int *server_fd, struct sockaddr_in *server_address) {
     }
 
     // Send username to the server to set this user's username
-    send(*server_fd, username, strlen(username) + 1, 0);
+    send(*server_fd, username, strlen(username) + 1, 0);    // +1 for NULL-terminator
 
     // Initialise the gui
     init_gui();
@@ -179,7 +173,7 @@ static void *handle_send_message(void *data) {
 
     while (1) {
         char *msg = read_input_from_user();
-        send(server_fd, msg, strlen(msg) + 1, 0);
+        send(server_fd, msg, strlen(msg) + 1, 0); // +1 for NULL-terminator
     }
 
     // Destroy thread and return
@@ -194,10 +188,10 @@ static void *handle_receive_message(void *data) {
     // Collect arguments
     int server_fd = *((int *) data);
 
-    char buffer[MSG_MAX] = "";
+    char buffer[MSG_MAX + NAME_MAX + 1] = "";  // +1 for NULL-terminator
 
     while (1) {
-        if (recv(server_fd, buffer, MSG_MAX, 0) > 0) {
+        if (recv(server_fd, buffer, MSG_MAX + NAME_MAX + 1, 0) > 0) {
             if (strcmp(buffer, "/quit") == 0) {
                 break;
             }
@@ -206,6 +200,7 @@ static void *handle_receive_message(void *data) {
                 continue;
             }
 
+            // Parse the message
             char *msg_packet = strdup(buffer);
             char *sender = strtok(msg_packet, "\t");
             char *msg = strtok(NULL, "\t");
@@ -218,10 +213,10 @@ static void *handle_receive_message(void *data) {
             }
             free(msg_packet);
         }
-        bzero(buffer, MSG_MAX);
+        bzero(buffer, MSG_MAX + NAME_MAX + 1);
     }
-    destroy_gui();
 
+    destroy_gui();
     printf("You have left the server.\n");
 
     // Destroy thread and return

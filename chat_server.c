@@ -195,8 +195,8 @@ static void handle_connections(int server_fd) {
         return;
     }
 
-    char username[MAX_USER_NAME + 1] = {0};    // +1 for NULL-terminating byte
-    if (read(conn_fd, username, MAX_USER_NAME + 1) < 1) {
+    char username[USERNAME_MAX + 1] = {0};    // +1 for NULL-terminating byte
+    if (read(conn_fd, username, USERNAME_MAX + 1) < 1) {
         fprintf(stderr, "read: failed to read username from the client\n");
         return;
     }

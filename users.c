@@ -67,11 +67,7 @@ int add_user(struct user *user) {
 }
 
 void send_message_to_all(struct user *user, char *message) {
-    char *buffer = malloc(strlen(user->name) + MSG_MAX);
-    if (buffer == NULL) {
-        fprintf(stderr, "send_message_to_all: not enough memory\n");
-        return;
-    }
+    char buffer[MSG_MAX + USERNAME_MAX + 1] = {0};  // +1 for NULL-terimator
     sprintf(buffer, "%s\t%s", user->name, message);
 
     // Print message to the server
@@ -90,7 +86,6 @@ void send_message_to_all(struct user *user, char *message) {
         }
     }
     pthread_mutex_unlock(&users_mutex);
-    free(buffer);
 }
 
 void *handle_user(void *data) {
@@ -113,15 +108,15 @@ void *handle_user(void *data) {
     }
 
     // Check for input from the user
-    char buffer[MSG_MAX] = {0};
-    while (read(user->conn_fd, buffer, MSG_MAX) > 0) {
+    char buffer[MSG_MAX + 1] = {0};     // +1 for NULL-terminator
+    while (read(user->conn_fd, buffer, MSG_MAX + 1) > 0) {
         if (strcmp(buffer, "/quit") == 0) {
             write(user->conn_fd, "/quit", 6);
             break;
         }
 
         send_message_to_all(user, buffer);
-        bzero(buffer, MSG_MAX);
+        bzero(buffer, MSG_MAX + 1);
     }
 
     server_print_user_left_status(user);
