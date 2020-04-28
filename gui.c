@@ -76,11 +76,12 @@ char *read_input_from_user() {
     bzero(input_buff, MSG_MAX);
     while ((ch = getch()) != '\n' || i == 0) {
         if (ch >= 32 && ch <= 126 && i < MSG_MAX + 1) {
+            wclear(input_box);
             if (i == 0) {
-                wclear(input_box);
                 curs_set(TRUE);
                 mvwprintw(input_box, 0, 0, "%c", ch);
             } else {
+                mvwprintw(input_box, 0, 0, "%s", input_buff);
                 wprintw(input_box, "%c", ch);
             }
             input_buff[i] = ch;
@@ -88,11 +89,13 @@ char *read_input_from_user() {
         } else if (ch == KEY_BACKSPACE && i > 0) {
             i--;
             input_buff[i] = '\0';
-            wprintw(input_box, "\b \b", ch);
+            wclear(input_box);
 
             if (i == 0) {
                 mvwprintw(input_box, 0, 0, "Start typing to chat...");
                 curs_set(FALSE);
+            } else {
+                mvwprintw(input_box, 0, 0, "%s", input_buff);
             }
         }
         wrefresh(input_box);
@@ -155,6 +158,14 @@ static void resize_gui(int sig) {
     wclear(chat_win);
     wclear(chat_box);
     wclear(input_win);
+    wclear(input_box);
+
+    // Reprint input_box message
+    if (strlen(input_buff) == 0) {
+        mvwprintw(input_box, 0, 0, "Start typing to chat...");
+    } else {
+        mvwprintw(input_box, 0, 0, "%s", input_buff);
+    }
 
     // Redraw GUI design
     box(chat_win, 0, 0);
